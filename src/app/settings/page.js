@@ -169,7 +169,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <p className='text-sm text-gray-500 mb-4'>
-                  Select ingredients you're allergic to or want to avoid in recipes.
+                  Select ingredients you&apos;re allergic to or want to avoid in recipes.
                 </p>
                 <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2'>
                   {allergensToAvoid.map((allergen) => (

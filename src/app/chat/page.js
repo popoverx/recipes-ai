@@ -97,8 +97,8 @@ export default function ChatPage() {
                     userPreferences.allergens.length > 0 ? (
                       <span>
                         {' '}
-                        You can click "Apply My Preferences" to let the AI know about your dietary
-                        preferences and favorite cuisines.
+                        You can click &quot;Apply My Preferences&quot; to let the AI know about your
+                        dietary preferences and favorite cuisines.
                       </span>
                     ) : (
                       <span>

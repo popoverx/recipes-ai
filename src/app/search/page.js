@@ -105,7 +105,7 @@ export default function SearchPage() {
             ))}
             {searchQuery && results.length === 0 && !isSearching && (
               <div className='col-span-full text-center py-8 text-gray-500'>
-                No recipes found matching "{searchQuery}"
+                No recipes found matching &quot;{searchQuery}&quot;
               </div>
             )}
           </div>
