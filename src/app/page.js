@@ -1,103 +1,284 @@
-import Image from "next/image";
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { useState, useEffect } from 'react';
+import { useStore } from '@/lib/store';
+import { Button } from '@/components/ui/button';
+import { ChatBubble, ChatBubbleContent, ChatBubbleTool } from '@/components/ui/chat-bubble';
+import { ChevronRight } from 'lucide-react';
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
+import { RecipeDisplay } from '@/components/recipe-display';
+import { getRecipeByQuery } from '@/lib/sample-recipes';
+import { extractNutritionData } from '@/lib/nutrition-parser';
+import { IconSend } from '@tabler/icons-react';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { messages, sendMessage, isLoading } = useChat();
+  const [currentRecipe, setCurrentRecipe] = useState(null);
+  const [showRecipe, setShowRecipe] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const { inputValue: input, setInputValue: setInput } = useStore();
+
+  // Update recipe when new messages arrive
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Get the latest message from the user
+      const latestUserMessage = [...messages].reverse().find((msg) => msg.role === 'user');
+      // Get the latest message from the assistant
+      const latestAssistantMessage = [...messages]
+        .reverse()
+        .find((msg) => msg.role === 'assistant');
+
+      if (latestUserMessage) {
+        // Find a recipe based on the user's query
+        const recipe = getRecipeByQuery(latestUserMessage.parts[0].text);
+        setCurrentRecipe(recipe);
+      }
+
+      // Extract nutrition data from assistant's response if available
+      if (latestAssistantMessage && latestAssistantMessage.parts[0]?.text) {
+        const extractedData = extractNutritionData(latestAssistantMessage.parts[0].text);
+        if (extractedData) {
+          setNutritionData(extractedData);
+        }
+      }
+    }
+  }, [messages]);
+
+  // Function to handle recipe generation
+  const handleGenerateRecipe = () => {
+    setShowRecipe(true);
+  };
+
+  // Function to update recipe based on a specific query
+  const handleSpecificRecipe = (query) => {
+    // Add nutrition information request to the query
+    const enhancedQuery = `${query}. Please include detailed nutrition facts information in your response, including calories, fat, carbohydrates, protein, vitamins and minerals with daily value percentages.`;
+
+    sendMessage({ text: enhancedQuery });
+
+    // Show loading state
+    setTimeout(() => {
+      const recipe = getRecipeByQuery(query);
+      setCurrentRecipe(recipe);
+      setShowRecipe(true);
+    }, 1500);
+  };
+
+  return (
+    <DashboardLayout title='Recipe Generator'>
+      <div className='flex h-[calc(100vh-4rem)] overflow-hidden'>
+        {/* Chat Section - Left Side */}
+        <div className={`relative flex flex-col ${showRecipe ? 'w-1/4 border-r' : 'w-full'}`}>
+          {/* Chat Messages - Scrollable Area */}
+          <div className='absolute inset-0 bottom-24 overflow-y-auto p-4 space-y-6 border-none'>
+            {messages.length === 0 ? (
+              <div className=''>
+                <div className='text-center mb-4'>
+                  <h2 className='text-xl font-semibold'>Welcome to RecipesAI!</h2>
+                  <p className='text-gray-600'>
+                    Ask me to create recipes based on ingredients you have, dietary preferences, or
+                    cuisine types.
+                  </p>
+                </div>
+                <div className='grid grid-cols-1 gap-3'>
+                  <Button
+                    variant='outline'
+                    className='h-auto justify-start p-3 text-left hover:bg-gray-50'
+                    onClick={() =>
+                      handleSpecificRecipe(
+                        'Create a quick pasta recipe with ingredients most people have at home'
+                      )
+                    }
+                  >
+                    <div>
+                      <div className='font-medium'>Quick pasta recipe</div>
+                      <p className='text-xs text-gray-500'>With common ingredients</p>
+                    </div>
+                  </Button>
+                  <Button
+                    variant='outline'
+                    className='h-auto justify-start p-3 text-left hover:bg-gray-50'
+                    onClick={() =>
+                      handleSpecificRecipe('What can I make with chicken, bell peppers, and rice?')
+                    }
+                  >
+                    <div>
+                      <div className='font-medium'>Use specific ingredients</div>
+                      <p className='text-xs text-gray-500'>Chicken, bell peppers, rice</p>
+                    </div>
+                  </Button>
+                  <Button
+                    variant='outline'
+                    className='h-auto justify-start p-3 text-left hover:bg-gray-50'
+                    onClick={() => handleSpecificRecipe('Give me a vegetarian dinner idea')}
+                  >
+                    <div>
+                      <div className='font-medium'>Vegetarian dinner</div>
+                      <p className='text-xs text-gray-500'>Plant-based meal ideas</p>
+                    </div>
+                  </Button>
+                  <Button
+                    variant='outline'
+                    className='h-auto justify-start p-3 text-left hover:bg-gray-50'
+                    onClick={() => handleSpecificRecipe('I need a gluten-free dessert recipe')}
+                  >
+                    <div>
+                      <div className='font-medium'>Gluten-free dessert</div>
+                      <p className='text-xs text-gray-500'>Sweet treats without gluten</p>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <ChatBubble role={message.role}>
+                    {message.parts.map((part, i) => {
+                      switch (part.type) {
+                        case 'text':
+                          return (
+                            <ChatBubbleContent key={`${message.id}-${i}`}>
+                              {part.text}
+                              {message.role === 'assistant' && (
+                                <div className='mt-2'>
+                                  <Button
+                                    size='sm'
+                                    className='bg-orange-500 hover:bg-orange-600 text-white'
+                                    onClick={handleGenerateRecipe}
+                                  >
+                                    {showRecipe ? 'Update Recipe' : 'View Recipe'}{' '}
+                                    <ChevronRight className='ml-1 h-4 w-4' />
+                                  </Button>
+                                </div>
+                              )}
+                            </ChatBubbleContent>
+                          );
+                        case 'tool-searchRecipe':
+                          return (
+                            <ChatBubbleTool key={`${message.id}-${i}`} toolType='searchRecipe'>
+                              <p className='text-xs text-orange-600 font-medium mb-1'>
+                                Recipe Ideas:
+                              </p>
+                              <ul className='list-disc pl-5 text-sm'>
+                                {part.result && part.result.recipeIdeas ? (
+                                  part.result.recipeIdeas.map((idea, idx) => (
+                                    <li key={idx}>{idea}</li>
+                                  ))
+                                ) : (
+                                  <li>Searching for recipes...</li>
+                                )}
+                              </ul>
+                            </ChatBubbleTool>
+                          );
+                        default:
+                          if (part.type && part.type.startsWith('tool-')) {
+                            return (
+                              <ChatBubbleTool key={`${message.id}-${i}`}>
+                                <p className='text-xs text-gray-600 font-medium mb-1'>
+                                  Tool: {part.type.replace('tool-', '')}
+                                </p>
+                                {part.result && (
+                                  <pre className='text-xs overflow-auto'>
+                                    {JSON.stringify(part.result, null, 2)}
+                                  </pre>
+                                )}
+                              </ChatBubbleTool>
+                            );
+                          }
+                          return null;
+                      }
+                    })}
+                  </ChatBubble>
+                </div>
+              ))
+            )}
+            {isLoading && (
+              <div className='flex justify-start'>
+                <ChatBubble>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-2 h-2 bg-orange-500 rounded-full animate-pulse'></div>
+                    <div className='w-2 h-2 bg-orange-500 rounded-full animate-pulse delay-150'></div>
+                    <div className='w-2 h-2 bg-orange-500 rounded-full animate-pulse delay-300'></div>
+                  </div>
+                </ChatBubble>
+              </div>
+            )}
+            <br />
+          </div>
+
+          {/* Input area - Fixed at bottom */}
+          <div className='absolute bottom-2 left-6 right-6'>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (input.trim()) {
+                  // Add nutrition information request to the query
+                  const enhancedQuery = `${input.trim()}. Please include detailed nutrition facts information in your response, including calories, fat, carbohydrates, protein, vitamins and minerals with daily value percentages.`;
+
+                  sendMessage({ text: enhancedQuery });
+                  setInput('');
+
+                  // If recipe is not showing, show it after a delay
+                  if (!showRecipe) {
+                    setTimeout(() => {
+                      setShowRecipe(true);
+                    }, 1500);
+                  }
+                }
+              }}
+              className='group flex flex-col gap-2 rounded-3xl border border-gray-200 bg-gray-50 p-3 transition-colors duration-150 ease-in-out relative'
+            >
+              <div className='relative flex flex-1 items-center'>
+                <textarea
+                  className='flex w-full ring-offset-background placeholder:text-gray-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] leading-snug md:text-base focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[200px] bg-transparent focus:bg-transparent flex-1 m-1 rounded-md p-0'
+                  value={input}
+                  placeholder='Ask about a recipe or list ingredients you have...'
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    // Auto-adjust height
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      e.target.form.dispatchEvent(new Event('submit', { cancelable: true }));
+                    }
+                  }}
+                  disabled={isLoading}
+                  style={{ minHeight: '40px', height: '40px' }}
+                  maxLength={50000}
+                />
+              </div>
+              <div className='flex items-center gap-1'>
+                <div className='ml-auto flex items-center gap-1'>
+                  <button
+                    title='Send message'
+                    type='submit'
+                    disabled={isLoading || !input.trim()}
+                    className='flex size-6 items-center justify-center rounded-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer text-white transition-opacity duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-50'
+                  >
+                    <IconSend className='shrink-0 h-6 w-6 p-1' />
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Recipe Display - Right Side */}
+        {showRecipe && (
+          <div className='w-3/4 flex flex-col h-full overflow-hidden'>
+            <div className='p-4 overflow-y-auto flex-1' style={{ height: 'calc(100% - 56px)' }}>
+              <RecipeDisplay recipe={currentRecipe} />
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
