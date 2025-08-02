@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { IconClock, IconUsers, IconAlertCircle, IconCheck } from '@tabler/icons-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { IconClock, IconUsers, IconReplace, IconCheck, IconAlertCircle } from '@tabler/icons-react';
 import { useStore } from '@/lib/store';
 import SimplifiedNutritionFacts from '@/components/ui/simplified-nutrition-facts';
+import { toast } from 'sonner';
 
 export function RecipeDisplay({ recipe, nutritionData }) {
   if (!recipe) {
@@ -36,17 +38,36 @@ export function RecipeDisplay({ recipe, nutritionData }) {
   const { appendToInput } = useStore();
 
   // Toggle checked state for ingredients
-  const toggleIngredient = (index) => {
+  const toggleIngredient = (index, ingredient) => {
     const newCheckedIngredients = [...checkedIngredients];
-    newCheckedIngredients[index] = !newCheckedIngredients[index];
+    const newValue = !newCheckedIngredients[index];
+    newCheckedIngredients[index] = newValue;
     setCheckedIngredients(newCheckedIngredients);
+
+    if (newValue) {
+      toast.success(`${ingredient} checked!`);
+    }
   };
 
   // Toggle checked state for steps
   const toggleStep = (index) => {
     const newCheckedSteps = [...checkedSteps];
-    newCheckedSteps[index] = !newCheckedSteps[index];
+    const newValue = !newCheckedSteps[index];
+    newCheckedSteps[index] = newValue;
     setCheckedSteps(newCheckedSteps);
+
+    if (newValue) {
+      toast.success(`Step ${index + 1} completed!`, {
+        description: displayRecipe.instructions[index]
+      });
+
+      // Check if all steps are completed
+      if (newCheckedSteps.every((step) => step)) {
+        toast.success('🎉 Recipe completed!', {
+          description: "You've completed all the steps. Enjoy your meal!"
+        });
+      }
+    }
   };
 
   return (
@@ -54,7 +75,7 @@ export function RecipeDisplay({ recipe, nutritionData }) {
       <div className='mb-4 animate-fadeIn py-6'>
         <div className='pb-2'>
           <h2 className='text-2xl text-gray-800'>{displayRecipe.title}</h2>
-          <div className='flex items-center gap-6 text-sm text-gray-500 mt-2'>
+          <div className='flex items-center gap-6 text-sm text-gray-500'>
             <div className='flex items-center gap-1'>
               <IconClock className='h-4 w-4 text-orange-500' />
               <span>Prep: {displayRecipe.prepTime}</span>
@@ -94,7 +115,7 @@ export function RecipeDisplay({ recipe, nutritionData }) {
                           ? 'bg-orange-500 border-orange-500 text-white'
                           : 'border-gray-300 hover:border-orange-300'
                       }`}
-                    onClick={() => toggleIngredient(index)}
+                    onClick={() => toggleIngredient(index, ingredient)}
                   >
                     {checkedIngredients[index] && <IconCheck className='h-3 w-3' />}
                   </div>
@@ -105,17 +126,31 @@ export function RecipeDisplay({ recipe, nutritionData }) {
                   >
                     {ingredient}
                   </span>
-                  {hoveredIngredient === index && (
-                    <button
-                      className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-gray-200 rounded-full'
-                      onClick={() => {
-                        const query = `I don't have ${ingredient.toLowerCase()}. What can I use as a substitute in this recipe?`;
-                        appendToInput(query);
-                      }}
-                      title='Find substitute for this ingredient'
-                    >
-                      <IconAlertCircle className='h-4 w-4 text-orange-500' />
-                    </button>
+                  {hoveredIngredient === index && !checkedIngredients[index] && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          role='button'
+                          tabIndex={0}
+                          className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-gray-200 rounded-full cursor-pointer'
+                          onClick={() => {
+                            const query = `I don't have ${ingredient.toLowerCase()}. What can I use as a substitute in this recipe?`;
+                            appendToInput(query);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              const query = `I don't have ${ingredient.toLowerCase()}. What can I use as a substitute in this recipe?`;
+                              appendToInput(query);
+                            }
+                          }}
+                        >
+                          <IconReplace className='h-4 w-4 text-orange-500' />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Find substitutes</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </li>
               ))}

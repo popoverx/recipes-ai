@@ -10,12 +10,13 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { RecipeDisplay } from '@/components/recipe-display';
 import { getRecipeByQuery } from '@/lib/sample-recipes';
 import { extractNutritionData } from '@/lib/nutrition-parser';
-import { IconSend } from '@tabler/icons-react';
+import { IconArrowNarrowUp } from '@tabler/icons-react';
 
 export default function Home() {
   const { messages, sendMessage, isLoading } = useChat();
   const [currentRecipe, setCurrentRecipe] = useState(null);
   const [showRecipe, setShowRecipe] = useState(true);
+  const [nutritionData, setNutritionData] = useState(null);
 
   const { inputValue: input, setInputValue: setInput } = useStore();
 
@@ -66,12 +67,16 @@ export default function Home() {
   };
 
   return (
-    <DashboardLayout title='Recipe Generator'>
-      <div className='flex h-[calc(100vh-4rem)] overflow-hidden'>
+    <DashboardLayout title='RecipesAI'>
+      <div className='flex h-screen overflow-hidden'>
         {/* Chat Section - Left Side */}
-        <div className={`relative flex flex-col ${showRecipe ? 'w-1/4 border-r' : 'w-full'}`}>
+        <div
+          className={`relative flex flex-col ${
+            showRecipe ? 'w-1/4 border-r border-zinc-300' : 'w-full'
+          }`}
+        >
           {/* Chat Messages - Scrollable Area */}
-          <div className='absolute inset-0 bottom-24 overflow-y-auto p-4 space-y-6 border-none'>
+          <div className='absolute inset-0 bottom-24 overflow-y-auto p-4 space-y-6'>
             {messages.length === 0 ? (
               <div className=''>
                 <div className='text-center mb-4'>
@@ -146,8 +151,8 @@ export default function Home() {
                               {message.role === 'assistant' && (
                                 <div className='mt-2'>
                                   <Button
-                                    size='sm'
-                                    className='bg-orange-500 hover:bg-orange-600 text-white'
+                                    size='xs'
+                                    className='bg-zinc-900 hover:bg-zinc-800 text-white px-2 py-1 text-xs cursor-pointer'
                                     onClick={handleGenerateRecipe}
                                   >
                                     {showRecipe ? 'Update Recipe' : 'View Recipe'}{' '}
@@ -230,11 +235,11 @@ export default function Home() {
                   }
                 }
               }}
-              className='group flex flex-col gap-2 rounded-3xl border border-gray-200 bg-gray-50 p-3 transition-colors duration-150 ease-in-out relative'
+              className='group flex flex-col gap-2 rounded-3xl border border-zinc-200 bg-zinc-100 p-3 transition-colors duration-150 ease-in-out relative'
             >
               <div className='relative flex flex-1 items-center'>
                 <textarea
-                  className='flex w-full ring-offset-background placeholder:text-gray-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] leading-snug md:text-base focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[200px] bg-transparent focus:bg-transparent flex-1 m-1 rounded-md p-0'
+                  className='flex w-full ring-offset-background placeholder:text-sm placeholder:text-gray-500 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none leading-snug md:text-sm focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[200px] bg-transparent focus:bg-transparent flex-1 m-1 rounded-md p-0'
                   value={input}
                   placeholder='Ask about a recipe or list ingredients you have...'
                   onChange={(e) => {
@@ -262,7 +267,7 @@ export default function Home() {
                     disabled={isLoading || !input.trim()}
                     className='flex size-6 items-center justify-center rounded-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer text-white transition-opacity duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-50'
                   >
-                    <IconSend className='shrink-0 h-6 w-6 p-1' />
+                    <IconArrowNarrowUp className='shrink-0 h-4 w-4' />
                   </button>
                 </div>
               </div>
@@ -273,7 +278,7 @@ export default function Home() {
         {/* Recipe Display - Right Side */}
         {showRecipe && (
           <div className='w-3/4 flex flex-col h-full overflow-hidden'>
-            <div className='p-4 overflow-y-auto flex-1' style={{ height: 'calc(100% - 56px)' }}>
+            <div className='p-8 overflow-y-auto flex-1'>
               <RecipeDisplay recipe={currentRecipe} />
             </div>
           </div>

@@ -13,12 +13,7 @@ function SidebarProvider({ children }) {
 
 function Sidebar({ className, children }) {
   return (
-    <div
-      className={cn(
-        'flex flex-col border-r border-b-accent-foreground bg-zinc-50',
-        className || 'w-64'
-      )}
-    >
+    <div className={cn('flex flex-col border-r border-zinc-300', className || 'w-64')}>
       {children}
     </div>
   );

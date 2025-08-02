@@ -47,7 +47,7 @@ export default function SimplifiedNutritionFacts({ data }) {
     <div className='w-full bg-white rounded-lg shadow-md overflow-hidden border border-zinc-200'>
       {/* Title */}
       <div className='p-4 bg-zinc-50'>
-        <h2 className='text-xl font-bold text-zinc-800'>Nutrition</h2>
+        <h2 className='text-xl font-bold text-zinc-800'>Macros</h2>
       </div>
 
       {/* Macronutrients Highlight */}
