@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ReferralTrigger } from '@/components/referral-modal';
 import {
   IconSearch,
   IconBell,
@@ -13,6 +14,7 @@ import {
   IconSettings,
   IconBookmark
 } from '@tabler/icons-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const navItems = [
   {
@@ -29,11 +31,6 @@ const navItems = [
     name: 'Collections',
     icon: IconBookmark,
     path: '/collections'
-  },
-  {
-    name: 'Profile',
-    icon: IconUserCircle,
-    path: '/profile'
   }
 ];
 
@@ -42,11 +39,7 @@ export function NavActions() {
 
   return (
     <div className='flex items-center gap-3'>
-      <div className='cursor-pointer text-orange-700 hover:text-orange-600 flex gap-1.5 items-center hover:underline text-sm'>
-        <IconCrown className='h-4 w-4' />
-        <span>Get more credits</span>
-        <IconChevronRight className='h-4 w-4' />
-      </div>
+      <ReferralTrigger />
 
       {navItems.map((item) => (
         <Link key={item.name} href={item.path}>
@@ -69,6 +62,13 @@ export function NavActions() {
           </Tooltip>
         </Link>
       ))}
+
+      <Link href='/profile'>
+        <Avatar>
+          <AvatarImage src='https://github.com/shadcn.png' />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
+      </Link>
     </div>
   );
 }

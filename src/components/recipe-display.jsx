@@ -7,6 +7,7 @@ import { IconClock, IconUsers, IconReplace, IconCheck, IconAlertCircle } from '@
 import { useStore } from '@/lib/store';
 import SimplifiedNutritionFacts from '@/components/ui/simplified-nutrition-facts';
 import { toast } from 'sonner';
+import { Progress } from './ui/progress';
 
 export function RecipeDisplay({ recipe, nutritionData }) {
   if (!recipe) {
@@ -171,14 +172,10 @@ export function RecipeDisplay({ recipe, nutritionData }) {
                   {Math.round((checkedSteps.filter(Boolean).length / checkedSteps.length) * 100)}%
                 </span>
               </div>
-              <div className='w-full h-2 bg-gray-300 rounded-full overflow-hidden mb-2'>
-                <div
-                  className='h-full bg-zinc-800 transition-all duration-300 rounded-full'
-                  style={{
-                    width: `${(checkedSteps.filter(Boolean).length / checkedSteps.length) * 100}%`
-                  }}
-                />
-              </div>
+              <Progress
+                value={(checkedSteps.filter(Boolean).length / checkedSteps.length) * 100}
+                className='mb-1'
+              />
             </div>
           </CardHeader>
           <CardContent className=''>

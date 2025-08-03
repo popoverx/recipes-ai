@@ -235,7 +235,7 @@ export default function Home() {
                   }
                 }
               }}
-              className='group flex flex-col gap-2 rounded-3xl border border-zinc-200 bg-zinc-100 p-3 transition-colors duration-150 ease-in-out relative'
+              className='group flex flex-col gap-2 rounded-3xl border border-zinc-200 bg-zinc-100 p-3 transition-colors duration-150 ease-in-out relative focus-within:ring-2 focus-within:ring-zinc-800'
             >
               <div className='relative flex flex-1 items-center'>
                 <textarea
